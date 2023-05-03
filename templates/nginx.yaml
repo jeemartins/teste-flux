@@ -1,0 +1,115 @@
+apiVersion: v2
+name: nginx
+description: A Helm chart for nginx
+version: 0.1.0
+appVersion: "1.19.10"
+
+dependencies:
+  # Dependências do chart nginx
+  # Nenhuma dependência neste exemplo
+
+# Valores padrão do chart nginx
+# Consulte a documentação oficial do chart para ver todas as opções disponíveis
+# Os valores podem ser modificados através de um arquivo de valores personalizado (values.yaml)
+
+values:
+  # Imagem do container do nginx a ser usada
+  image:
+    repository: nginx
+    tag: 1.19.10
+
+  # Configuração do serviço nginx
+  service:
+    # Tipo de serviço a ser criado: ClusterIP, NodePort, LoadBalancer ou ExternalName
+    type: ClusterIP
+    # Portas do serviço nginx
+    ports:
+      - name: http
+        port: 80
+        targetPort: 80
+      - name: https
+        port: 443
+        targetPort: 443
+
+  # Configuração dos pods do nginx
+  pod:
+    # Quantidade de réplicas do pod
+    replicas: 1
+    # Configuração do template do pod
+    template:
+      # Metadados do pod
+      metadata:
+        # Rótulos do pod
+        labels:
+          app: nginx
+      # Especificação do pod
+      spec:
+        # Contêineres do pod
+        containers:
+          - name: nginx
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            ports:
+              - name: http
+                containerPort: 80
+              - name: https
+                containerPort: 443
+            # Configurações de volume
+            volumeMounts:
+              - name: nginx-config
+                mountPath: /etc/nginx/nginx.conf
+                subPath: nginx.conf
+                readOnly: true
+              - name: nginx-html
+                mountPath: /usr/share/nginx/html
+                readOnly: true
+        # Configurações de volume
+        volumes:
+          - name: nginx-config
+            configMap:
+              name: nginx-config
+          - name: nginx-html
+            persistentVolumeClaim:
+            claimName: nginx-html
+
+# Manifestos Kubernetes gerados pelo chart nginx
+# Este é um exemplo, os recursos podem ser adicionados ou removidos de acordo com sua necessidade
+# Certifique-se de verificar a documentação oficial do chart para ver todos os recursos gerados pelo chart
+
+# Configuração do serviço nginx
+service:
+  metadata:
+    name: "{{ .Release.Name }}"
+  spec:
+    type: "{{ .Values.service.type }}"
+    ports:
+      {{- range $port := .Values.service.ports }}
+      - name: {{ $port.name }}
+        port: {{ $port.port }}
+        targetPort: {{ $port.targetPort }}
+      {{- end }}
+    selector:
+      app: nginx
+
+# Configuração do ingress nginx
+ingress:
+  metadata:
+    name: "{{ .Release.Name }}"
+  spec:
+    rules:
+      - host: "{{ .Release.Name }}.example.com"
+        http:
+          paths:
+            - path: /
+              backend:
+                serviceName: "{{ .Release.Name }}"
+                servicePort: http
+
+# Configuração do pod nginx
+pod:
+  metadata:
+    labels:
+      app: nginx
+  spec:
+    replicas: {{ .Values.pod.replicas }}
+    template:
+     
