@@ -1,44 +1,5 @@
-image:
-  repository: nginx
-  tag: 1.19.10
-  
-service:
-  type: ClusterIP
-  ports:
-    - name: http
-      port: 80
-      targetPort: 80
-    - name: https
-      port: 443
-      targetPort: 443
-
 pod:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-        - name: nginx
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          ports:
-            - name: http
-              containerPort: 80
-            - name: https
-              containerPort: 443
-          volumeMounts:
-            - name: nginx-config
-              mountPath: /etc/nginx/nginx.conf
-              subPath: nginx.conf
-              readOnly: true
-            - name: nginx-html
-              mountPath: /usr/share/nginx/html
-              readOnly: true
-      volumes:
-        - name: nginx-config
-          configMap:
-            name: nginx-config
-        - name: nginx-html
-          persistentVolumeClaim:
-          claimName: nginx-html
+  name: "nginx"
+  namespace: "flux-system"
+
+
